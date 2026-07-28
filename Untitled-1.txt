@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Game Belajar Bahasa Inggris</title>
+  <style>
+    :root{--bg:#f6f8fb;--card:#ffffff;--accent:#4f46e5;--muted:#6b7280}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,Arial;background:var(--bg);color:#0f172a}
+    .wrap{max-width:980px;margin:28px auto;padding:20px}
+    header{display:flex;gap:16px;align-items:center;justify-content:space-between}
+    h1{margin:0;font-size:20px}
+    .controls{display:flex;gap:8px;align-items:center}
+    button{background:var(--accent);color:white;padding:8px 12px;border-radius:10px;border:0;cursor:pointer}
+    button.ghost{background:transparent;color:var(--accent);border:1px solid rgba(79,70,229,.15)}
+    .card{background:var(--card);padding:18px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,.06);margin-top:18px}
+    .top-stats{display:flex;gap:18px;align-items:center}
+    .stat{background:#f8fafc;padding:10px;border-radius:10px;text-align:center;min-width:110px}
+    .question-area{display:flex;gap:18px;flex-wrap:wrap}
+    .qa{flex:1 1 420px}
+    .vocab-table{flex:1 1 420px;max-height:460px;overflow:auto}
+    .question{font-size:18px;margin-bottom:12px}
+    .options{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .option-btn{padding:12px;border-radius:10px;border:1px solid #e6e9ef;background:#fff;cursor:pointer}
+    .option-btn.correct{border-color:green;background:#ecfdf5}
+    .option-btn.wrong{border-color:#f87171;background:#fff5f5}
+    .hint{color:var(--muted);font-size:13px}
+    table{width:100%;border-collapse:collapse;font-size:14px}
+    th,td{padding:8px;border-bottom:1px solid #f1f5f9;text-align:left}
+    .small{font-size:12px;color:var(--muted)}
+    .form-row{display:flex;gap:8px;margin-top:8px}
+    input,select,textarea{padding:8px;border-radius:8px;border:1px solid #e6e9ef;flex:1}
+    .flex-row{display:flex;gap:8px;align-items:center}
+    footer{margin-top:12px;text-align:center;color:var(--muted);font-size:13px}
+    @media (max-width:720px){.question-area{flex-direction:column}.options{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Game Belajar Bahasa Inggris — Web</h1>
+        <div class="small">Latihan kosa kata, soal acak, tabel kata, dan sistem skor.</div>
+      </div>
+
+      <div class="controls">
+        <button id="startBtn">Mulai Game</button>
+        <button class="ghost" id="resetBtn">Reset Skor</button>
+      </div>
+    </header>
+
+    <div class="card">
+      <div class="top-stats">
+        <div class="stat">
+          <div class="small">Skor</div>
+          <div id="score">0</div>
+        </div>
+        <div class="stat">
+          <div class="small">Benar</div>
+          <div id="correctCount">0</div>
+        </div>
+        <div class="stat">
+          <div class="small">Salah</div>
+          <div id="wrongCount">0</div>
+        </div>
+        <div class="stat">
+          <div class="small">Soal ke</div>
+          <div id="qIndex">0</div>
+        </div>
+        <div style="margin-left:auto;text-align:right">
+          <div class="small">Mode</div>
+          <select id="modeSelect">
+            <option value="mc">Pilihan Ganda (MC)</option>
+            <option value="type">Ketik Jawaban</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="question-area">
+        <div class="qa">
+          <div class="question card" id="questionCard">
+            <div id="questionText">Tekan "Mulai Game" untuk memulai.</div>
+            <div class="hint small" id="exampleHint"></div>
+          </div>
+
+          <div id="options" class="card">
+            <!-- Pilihan tampil di sini -->
+            <div class="options" id="optionsGrid"></div>
+            <div id="typeInput" style="display:none;margin-top:10px">
+              <input id="typedAnswer" placeholder="Ketik jawaban di sini" />
+              <div style="margin-top:8px;display:flex;gap:8px">
+                <button id="submitTyped">Submit</button>
+                <button class="ghost" id="skipBtn">Lewati</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px;display:flex;gap:8px">
+            <button class="ghost" id="hintBtn">Tampilkan Terjemahan</button>
+            <button class="ghost" id="showAnswerBtn">Tampilkan Jawaban</button>
+            <button id="nextBtn">Soal Berikutnya</button>
+          </div>
+        </div>
+
+        <div class="vocab-table card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <strong>Daftar Kosakata</strong>
+              <div class="small">Tambah / edit / hapus kata. Perubahan otomatis disimpan.</div>
+            </div>
+            <div class="flex-row">
+              <button id="exportBtn" class="ghost">Export JSON</button>
+              <button id="importBtn" class="ghost">Import JSON</button>
+            </div>
+          </div>
+
+          <table id="vocabTable" style="margin-top:8px">
+            <thead><tr><th>#</th><th>Word</th><th>Meaning</th><th>Example</th><th>Action</th></tr></thead>
+            <tbody></tbody>
+          </table>
+
+          <div class="form-row">
+            <input id="wordInput" placeholder="Word (kata bahasa Inggris)" />
+            <input id="meaningInput" placeholder="Arti / terjemahan" />
+            <input id="exampleInput" placeholder="Contoh kalimat (opsional)" />
+            <button id="addWordBtn">Tambah Kata</button>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        Tips: gunakan mode Pilihan Ganda untuk pemula, Mode Ketik untuk latihan menulis. Data tersimpan di browser (localStorage).
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    // --------------------------
+    // Data awal (bisa tambahkan sendiri)
+    // --------------------------
+    const DEFAULT_VOCAB = [
+      {id:1,word:'apple',meaning:'apel',example:'I eat an apple every day.'},
+      {id:2,word:'house',meaning:'rumah',example:'They live in a big house.'},
+      {id:3,word:'run',meaning:'lari',example:'She can run very fast.'},
+      {id:4,word:'book',meaning:'buku',example:'This book is interesting.'},
+      {id:5,word:'happy',meaning:'senang',example:'I am very happy today.'},
+      {id:6,word:'water',meaning:'air',example:'Drink some water.'},
+      {id:7,word:'school',meaning:'sekolah',example:'He goes to school by bike.'},
+      {id:8,word:'computer',meaning:'komputer',example:'My computer is new.'}
+    ];
+
+    // --------------------------
+    // State & elemen DOM
+    // --------------------------
+    let vocab = [];
+    let score = 0, correct=0, wrong=0, qIndex=0;
+    let currentQuestion = null;
+
+    const el = id=>document.getElementById(id);
+    const scoreEl = el('score'), correctEl = el('correctCount'), wrongEl = el('wrongCount'), qIndexEl = el('qIndex');
+    const startBtn = el('startBtn'), resetBtn = el('resetBtn'), nextBtn = el('nextBtn');
+    const optionsGrid = el('optionsGrid'), questionText = el('questionText'), exampleHint = el('exampleHint');
+    const modeSelect = el('modeSelect'), typeInputWrap = el('typeInput'), typedAnswer = el('typedAnswer'), submitTyped = el('submitTyped');
+    const hintBtn = el('hintBtn'), showAnswerBtn = el('showAnswerBtn'), skipBtn = el('skipBtn');
+
+    // --------------------------
+    // LocalStorage helpers
+    // --------------------------
+    const STORAGE_KEY = 'game_en_vocab_v1';
+    const STATS_KEY = 'game_en_stats_v1';
+
+    function loadData(){
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw) {
+        try{ vocab = JSON.parse(raw); if(!Array.isArray(vocab) || vocab.length===0) throw 'bad'; }
+        catch(e){ vocab = DEFAULT_VOCAB.slice(); saveData(); }
+      } else { vocab = DEFAULT_VOCAB.slice(); saveData(); }
+
+      const statsRaw = localStorage.getItem(STATS_KEY);
+      if(statsRaw){ try{ const s = JSON.parse(statsRaw); score=s.score||0; correct=s.correct||0; wrong=s.wrong||0; qIndex=s.qIndex||0;}catch(e){} }
+    }
+
+    function saveData(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(vocab)); }
+    function saveStats(){ localStorage.setItem(STATS_KEY, JSON.stringify({score,correct,wrong,qIndex})); }
+
+    // --------------------------
+    // UI: tabel kosakata
+    // --------------------------
+    function renderVocabTable(){
+      const tbody = document.querySelector('#vocabTable tbody'); tbody.innerHTML='';
+      vocab.forEach((w,i)=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${i+1}</td><td>${escapeHtml(w.word)}</td><td>${escapeHtml(w.meaning)}</td><td>${escapeHtml(w.example||'')}</td><td>
+          <button data-id="${w.id}" class="ghost edit">Edit</button>
+          <button data-id="${w.id}" class="ghost del">Hapus</button>
+        </td>`;
+        tbody.appendChild(tr);
+      });
+
+      // attach handlers
+      document.querySelectorAll('.edit').forEach(b=>b.onclick=e=>{
+        const id = +e.target.dataset.id; const w = vocab.find(x=>x.id===id); if(!w) return;
+        el('wordInput').value = w.word; el('meaningInput').value = w.meaning; el('exampleInput').value = w.example||'';
+        // remove old entry
+        vocab = vocab.filter(x=>x.id!==id); saveData(); renderVocabTable();
+      });
+      document.querySelectorAll('.del').forEach(b=>b.onclick=e=>{
+        const id = +e.target.dataset.id; if(!confirm('Hapus kata ini?')) return; vocab = vocab.filter(x=>x.id!==id); saveData(); renderVocabTable();
+      });
+    }
+
+    // --------------------------
+    // Game logic
+    // --------------------------
+    function startGame(){
+      if(vocab.length<2) { alert('Tambahkan lebih banyak kata (minimal 2).'); return; }
+      qIndex = 0; score = 0; correct = 0; wrong = 0; updateStatsUI(); nextQuestion(); saveStats();
+    }
+
+    function nextQuestion(){
+      qIndex++;
+      qIndexEl.textContent = qIndex;
+      const mode = modeSelect.value;
+      currentQuestion = makeQuestion(mode);
+      showQuestion(currentQuestion, mode);
+      saveStats();
+    }
+
+    function makeQuestion(mode){
+      // pilih 1 kata target
+      const target = randomChoice(vocab);
+      if(mode==='mc'){
+        // buat 3 distractor
+        const others = vocab.filter(v=>v.word!==target.word);
+        const opts = [target.word];
+        shuffleArray(others);
+        for(let i=0;i<Math.min(3,others.length);i++) opts.push(others[i].word);
+        shuffleArray(opts);
+        return {target,options:opts};
+      } else {
+        return {target};
+      }
+    }
+
+    function showQuestion(q,mode){
+      exampleHint.textContent = q.target.example? ('Example: ' + q.target.example) : '';
+      questionText.textContent = mode==='mc' ? `Pilih arti kata: "${q.target.word}"` : `Tulis arti kata: "${q.target.word}"`;
+      optionsGrid.innerHTML='';
+      if(mode==='mc'){
+        typeInputWrap.style.display='none'; el('optionsGrid').style.display='grid';
+        q.options.forEach(opt=>{
+          const b = document.createElement('button'); b.className=
